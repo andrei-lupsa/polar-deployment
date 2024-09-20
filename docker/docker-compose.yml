@@ -4,6 +4,7 @@ services:
   catalog-service:
     depends_on:
       - polar-postgres
+      - config-service
     image: "ghcr.io/andrei-lupsa/catalog-service:0.0.1-SNAPSHOT"
     container_name: "catalog-service"
     ports:
@@ -15,7 +16,7 @@ services:
       - BPL_DEBUG_PORT=8001
       - SPRING_DATASOURCE_URL=jdbc:postgresql://polar-postgres:5432/polardb_catalog
       - SPRING_PROFILES_ACTIVE=testdata
-      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
 
   polar-postgres:
     image: "postgres:16.4"
@@ -26,3 +27,11 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=polardb_catalog
+
+  config-service:
+    image: "ghcr.io/andrei-lupsa/config-service:0.0.1-SNAPSHOT"
+    container_name: "config-service"
+    ports:
+      - "8888:8888"
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
