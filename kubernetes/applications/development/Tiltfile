@@ -1,3 +1,8 @@
+# Deploy resources
+k8s_yaml(['../../platform/development/services/postgresql.yml',
+          '../../platform/development/services/rabbitmq.yml',
+          '../../platform/development/services/redis.yml'])
+
 include('../../../../config-service/Tiltfile')
 include('../../../../edge-service/Tiltfile')
 include('../../../../dispatcher-service/Tiltfile')
