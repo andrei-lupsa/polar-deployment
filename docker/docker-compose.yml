@@ -1,11 +1,41 @@
 name: polar-deployment
 services:
 
+  edge-service:
+    depends_on:
+      - config-service
+      - polar-redis
+      - catalog-service
+      - order-service
+    image: "ghcr.io/andrei-lupsa/edge-service:latest"
+    container_name: "edge-service"
+    ports:
+      - "9000:9000"
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+      - SPRING_PROFILES_ACTIVE=k8s
+      - CATALOG_SERVICE_URL=http://catalog-service:9001
+      - ORDER_SERVICE_URL=http://order-service:9002
+
+  dispatcher-service:
+    depends_on:
+      - config-service
+      - polar-rabbitmq
+    image: "ghcr.io/andrei-lupsa/dispatcher-service:latest"
+    container_name: "dispatcher-service"
+    ports:
+      - "9003:9003"
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+      - SPRING_PROFILES_ACTIVE=k8s
+
   catalog-service:
     depends_on:
       - polar-postgres
       - config-service
-    image: "ghcr.io/andrei-lupsa/catalog-service:0.0.1-SNAPSHOT"
+    image: "ghcr.io/andrei-lupsa/catalog-service:latest"
     container_name: "catalog-service"
     ports:
       - "9001:9001"
@@ -14,24 +44,22 @@ services:
       - BPL_JVM_THREAD_COUNT=50
 #      - BPL_DEBUG_ENABLED=true
 #      - BPL_DEBUG_PORT=8001
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://polar-postgres:5432/polardb_catalog
-      - SPRING_PROFILES_ACTIVE=testdata
+      - SPRING_PROFILES_ACTIVE=k8s,testdata
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
 
   order-service:
     depends_on:
       - polar-postgres
       - config-service
-    image: "ghcr.io/andrei-lupsa/order-service:0.0.1-SNAPSHOT"
+      - polar-rabbitmq
+    image: "ghcr.io/andrei-lupsa/order-service:latest"
     container_name: "order-service"
     ports:
       - "9002:9002"
     environment:
       - BPL_JVM_THREAD_COUNT=50
-      - SPRING_R2DBC_URL=r2dbc:postgresql://polar-postgres:5432/polardb_order
-      - SPRING_FLYWAY_URL=jdbc:postgresql://polar-postgres:5432/polardb_order
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
-      - POLAR_CATALOG-SERVICE-URI=http://catalog-service:9001
+      - SPRING_PROFILES_ACTIVE=k8s
 
   polar-postgres:
     image: "postgres:16.4"
@@ -51,7 +79,7 @@ services:
       - "6379:6379"
 
   config-service:
-    image: "ghcr.io/andrei-lupsa/config-service:0.0.1-SNAPSHOT"
+    image: "ghcr.io/andrei-lupsa/config-service:latest"
     container_name: "config-service"
     ports:
       - "8888:8888"
