@@ -17,6 +17,8 @@ services:
       - SPRING_PROFILES_ACTIVE=k8s
       - CATALOG_SERVICE_URL=http://catalog-service:9001
       - ORDER_SERVICE_URL=http://order-service:9002
+      - SPA_URL=http://polar-ui:9004
+    restart: unless-stopped
 
   dispatcher-service:
     depends_on:
@@ -30,6 +32,7 @@ services:
       - BPL_JVM_THREAD_COUNT=50
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
       - SPRING_PROFILES_ACTIVE=k8s
+    restart: unless-stopped
 
   catalog-service:
     depends_on:
@@ -46,6 +49,7 @@ services:
 #      - BPL_DEBUG_PORT=8001
       - SPRING_PROFILES_ACTIVE=k8s,testdata
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+    restart: unless-stopped
 
   order-service:
     depends_on:
@@ -61,6 +65,7 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
       - SPRING_PROFILES_ACTIVE=k8s
       - POLAR_CATALOG_SERVICE_URI=http://catalog-service:9001
+    restart: unless-stopped
 
   polar-postgres:
     image: "postgres:16.4"
@@ -72,12 +77,14 @@ services:
       - POSTGRES_PASSWORD=password
     volumes:
       - ./postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
 
   polar-redis:
     image: redis:7.4
     container_name: polar-redis
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
   config-service:
     image: "ghcr.io/andrei-lupsa/config-service:latest"
@@ -86,6 +93,7 @@ services:
       - "8888:8888"
     environment:
       - BPL_JVM_THREAD_COUNT=50
+    restart: unless-stopped
 
   polar-rabbitmq:
     image: rabbitmq:4.0-management
@@ -95,3 +103,26 @@ services:
       - 15672:15672
     volumes:
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    restart: unless-stopped
+
+  polar-keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: "polar-keycloak"
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    environment:
+      - KEYCLOAK_ADMIN=user
+      - KEYCLOAK_ADMIN_PASSWORD=password
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+
+  polar-ui:
+    image: "ghcr.io/polarbookshop/polar-ui:v1"
+    container_name: "polar-ui"
+    ports:
+      - 9004:9004
+    environment:
+      - PORT=9004
+    restart: unless-stopped
