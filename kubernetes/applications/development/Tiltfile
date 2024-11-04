@@ -1,7 +1,10 @@
 # Deploy resources
 k8s_yaml(['../../platform/development/services/postgresql.yml',
           '../../platform/development/services/rabbitmq.yml',
-          '../../platform/development/services/redis.yml'])
+          '../../platform/development/services/redis.yml',
+          '../../platform/development/services/keycloak-config.yml',
+          '../../platform/development/services/keycloak.yml',
+          '../../platform/development/services/polar-ui.yml'])
 
 include('../../../../config-service/Tiltfile')
 include('../../../../edge-service/Tiltfile')
