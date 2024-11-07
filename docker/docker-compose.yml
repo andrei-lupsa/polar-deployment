@@ -61,6 +61,10 @@ services:
 #      - BPL_DEBUG_PORT=8001
       - SPRING_PROFILES_ACTIVE=k8s,testdata
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+      - THC_PATH=/actuator/health
+      - THC_PORT=9001
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
     restart: unless-stopped
     logging:
       driver: fluentd
