@@ -167,7 +167,7 @@ services:
     container_name: grafana
     depends_on:
       - loki
-#      - prometheus
+      - prometheus
 #      - tempo
     ports:
       - "3000:3000"
@@ -198,3 +198,11 @@ services:
       - LOKI_URL=http://loki:3100/loki/api/v1/push
     volumes:
       - ./observability/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+
+  prometheus:
+    image: quay.io/prometheus/prometheus:v2.55.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
