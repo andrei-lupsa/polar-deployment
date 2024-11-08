@@ -8,14 +8,20 @@ services:
       - polar-keycloak
       - polar-redis
       - polar-ui
+      - tempo
     image: "ghcr.io/andrei-lupsa/edge-service:latest"
+    pull_policy: always
     container_name: "edge-service"
     ports:
       - "9000:9000"
     environment:
       - BPL_JVM_THREAD_COUNT=50
+      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
+      - OTEL_SERVICE_NAME=edge-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_METRICS_EXPORTER=none
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
-      - SPRING_PROFILES_ACTIVE=k8s
+      - SPRING_PROFILES_ACTIVE=docker
       - CATALOG_SERVICE_URL=http://catalog-service:9001
       - ORDER_SERVICE_URL=http://order-service:9002
       - SPA_URL=http://polar-ui:9004
@@ -30,14 +36,20 @@ services:
       - fluent-bit
       - config-service
       - polar-rabbitmq
+      - tempo
     image: "ghcr.io/andrei-lupsa/dispatcher-service:latest"
+    pull_policy: always
     container_name: "dispatcher-service"
     ports:
       - "9003:9003"
     environment:
       - BPL_JVM_THREAD_COUNT=50
+      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
+      - OTEL_SERVICE_NAME=dispatcher-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_METRICS_EXPORTER=none
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
-      - SPRING_PROFILES_ACTIVE=k8s
+      - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
     logging:
       driver: fluentd
@@ -50,7 +62,9 @@ services:
       - polar-postgres
       - polar-keycloak
       - config-service
+      - tempo
     image: "ghcr.io/andrei-lupsa/catalog-service:latest"
+    pull_policy: always
     container_name: "catalog-service"
     ports:
       - "9001:9001"
@@ -59,7 +73,11 @@ services:
       - BPL_JVM_THREAD_COUNT=50
 #      - BPL_DEBUG_ENABLED=true
 #      - BPL_DEBUG_PORT=8001
-      - SPRING_PROFILES_ACTIVE=k8s,testdata
+      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
+      - OTEL_SERVICE_NAME=catalog-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_METRICS_EXPORTER=none
+      - SPRING_PROFILES_ACTIVE=docker,testdata
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
       - THC_PATH=/actuator/health
       - THC_PORT=9001
@@ -78,14 +96,20 @@ services:
       - config-service
       - polar-keycloak
       - polar-rabbitmq
+      - tempo
     image: "ghcr.io/andrei-lupsa/order-service:latest"
+    pull_policy: always
     container_name: "order-service"
     ports:
       - "9002:9002"
     environment:
       - BPL_JVM_THREAD_COUNT=50
+      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
+      - OTEL_SERVICE_NAME=order-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_METRICS_EXPORTER=none
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
-      - SPRING_PROFILES_ACTIVE=k8s
+      - SPRING_PROFILES_ACTIVE=docker
       - POLAR_CATALOG_SERVICE_URI=http://catalog-service:9001
     restart: unless-stopped
     logging:
@@ -115,12 +139,18 @@ services:
   config-service:
     depends_on:
       - fluent-bit
+      - tempo
     image: "ghcr.io/andrei-lupsa/config-service:latest"
+    pull_policy: always
     container_name: "config-service"
     ports:
       - "8888:8888"
     environment:
       - BPL_JVM_THREAD_COUNT=50
+      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
+      - OTEL_SERVICE_NAME=config-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_METRICS_EXPORTER=none
     restart: unless-stopped
     logging:
       driver: fluentd
@@ -168,7 +198,7 @@ services:
     depends_on:
       - loki
       - prometheus
-#      - tempo
+      - tempo
     ports:
       - "3000:3000"
     environment:
@@ -206,3 +236,15 @@ services:
       - "9090:9090"
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  tempo:
+#    image: grafana/tempo:2.5.0
+    image: grafana/tempo:2.6.1
+    container_name: tempo
+    command: -config.file=/etc/tempo-config.yml
+    ports:
+      - "3110:3100" # Tempo
+      - "4317:4317" # OTel
+      - "4318:4318" # OTel
+    volumes:
+      - ./observability/tempo/tempo.yml:/etc/tempo-config.yml
