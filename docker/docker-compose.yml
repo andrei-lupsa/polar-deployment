@@ -1,6 +1,27 @@
 name: polar-deployment
 services:
 
+  config-service:
+    depends_on:
+      - fluent-bit
+      - tempo
+    image: "ghcr.io/andrei-lupsa/config-service:latest"
+    pull_policy: always
+    container_name: "config-service"
+    ports:
+      - "8888:8888"
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
+      - OTEL_SERVICE_NAME=config-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_METRICS_EXPORTER=none
+    restart: unless-stopped
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: 127.0.0.1:24224
+
   edge-service:
     depends_on:
       - fluent-bit
@@ -121,11 +142,20 @@ services:
       options:
         fluentd-address: 127.0.0.1:24224
 
+  polar-ui:
+    image: "ghcr.io/polarbookshop/polar-ui:v1"
+    container_name: "polar-ui"
+    ports:
+      - "9004:9004"
+    environment:
+      - PORT=9004
+    restart: unless-stopped
+
   polar-postgres:
     image: "postgres:16.4"
     container_name: "polar-postgres"
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
@@ -140,33 +170,12 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  config-service:
-    depends_on:
-      - fluent-bit
-      - tempo
-    image: "ghcr.io/andrei-lupsa/config-service:latest"
-    pull_policy: always
-    container_name: "config-service"
-    ports:
-      - "8888:8888"
-    environment:
-      - BPL_JVM_THREAD_COUNT=50
-      - JAVA_TOOL_OPTIONS=-javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-2.9.0.jar
-      - OTEL_SERVICE_NAME=config-service
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
-      - OTEL_METRICS_EXPORTER=none
-    restart: unless-stopped
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: 127.0.0.1:24224
-
   polar-rabbitmq:
     image: rabbitmq:4.0-management
     container_name: polar-rabbitmq
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     restart: unless-stopped
@@ -181,22 +190,12 @@ services:
       - KEYCLOAK_ADMIN=user
       - KEYCLOAK_ADMIN_PASSWORD=password
     ports:
-      - 8080:8080
-    restart: unless-stopped
-
-  polar-ui:
-    image: "ghcr.io/polarbookshop/polar-ui:v1"
-    container_name: "polar-ui"
-    ports:
-      - 9004:9004
-    environment:
-      - PORT=9004
+      - "8080:8080"
     restart: unless-stopped
 
   # Observability
 
   grafana:
-#    image: grafana/grafana-oss:10.4.3
     image: grafana/grafana-oss:11.3.0
     container_name: grafana
     depends_on:
@@ -214,7 +213,6 @@ services:
       - ./observability/grafana/grafana.ini:/etc/grafana/grafana.ini
 
   loki:
-#    image: grafana/loki:2.9.8
     image: grafana/loki:3.2.1
     container_name: loki
     depends_on:
@@ -223,7 +221,6 @@ services:
       - "3100:3100"
 
   fluent-bit:
-#    image: grafana/fluent-bit-plugin-loki:2.9.8
     image: grafana/fluent-bit-plugin-loki:3.2.1
     container_name: fluent-bit
     ports:
@@ -242,7 +239,6 @@ services:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   tempo:
-#    image: grafana/tempo:2.5.0
     image: grafana/tempo:2.6.1
     container_name: tempo
     command: -config.file=/etc/tempo-config.yml
