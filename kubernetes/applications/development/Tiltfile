@@ -6,7 +6,6 @@ k8s_yaml(['../../platform/development/services/postgresql.yml',
           '../../platform/development/services/keycloak.yml',
           '../../platform/development/services/polar-ui.yml'])
 
-include('../../../../config-service/Tiltfile')
 include('../../../../edge-service/Tiltfile')
 include('../../../../dispatcher-service/Tiltfile')
 include('../../../../order-service/Tiltfile')
