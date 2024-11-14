@@ -5,9 +5,6 @@ on:
       app_repo:
         type: string
         required: true
-      dispatch_token:
-        type: string
-        required: true
 
 env:
   OWNER: andrei-lupsa
@@ -43,7 +40,7 @@ jobs:
       - name: Deliver application to production
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ inputs.dispatch_token }}
+          token: ${{ secrets.DISPATCH_TOKEN }}
           repository: ${{env.OWNER}}/${{env.DEPLOY_REPO}}
           event-type: app_delivery
           client-payload: '{
