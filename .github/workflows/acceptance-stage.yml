@@ -5,6 +5,9 @@ on:
       app_repo:
         type: string
         required: true
+    secrets:
+      DISPATCH_TOKEN:
+        required: true
 
 env:
   OWNER: andrei-lupsa
