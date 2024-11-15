@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- github.com/andrei-lupsa/catalog-service/k8s?ref=926a9531cb931c44dffabda7393184ae5cf7805b
+- github.com/andrei-lupsa/catalog-service/k8s?ref=8eceb4172c22627078668f41356e370d5aee6bd2
 
 patches:
 - path: patch-env.yml
@@ -18,7 +18,7 @@ configMapGenerator:
 images:
 - name: catalog-service
   newName: ghcr.io/andrei-lupsa/catalog-service
-  newTag: 926a9531cb931c44dffabda7393184ae5cf7805b
+  newTag: 8eceb4172c22627078668f41356e370d5aee6bd2
 
 replicas:
 - count: 2
