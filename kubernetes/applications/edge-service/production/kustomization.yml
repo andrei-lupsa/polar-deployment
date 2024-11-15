@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- github.com/andrei-lupsa/edge-service/k8s?ref=c14323c8211e75432b1b40a2ef18daa9465e64e5
+- github.com/andrei-lupsa/edge-service/k8s?ref=0138913484b32d1ea66802ce9582f29cdd86532b
 
 patches:
 - path: patch-env.yml
@@ -19,7 +19,7 @@ configMapGenerator:
 images:
 - name: edge-service
   newName: ghcr.io/andrei-lupsa/edge-service
-  newTag: c14323c8211e75432b1b40a2ef18daa9465e64e5
+  newTag: 0138913484b32d1ea66802ce9582f29cdd86532b
 
 replicas:
 - count: 1
